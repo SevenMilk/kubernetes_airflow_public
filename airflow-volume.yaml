@@ -1,0 +1,32 @@
+kind: PersistentVolume
+apiVersion: v1ReadWriteOnce
+metadata:
+  name: data-analyze
+spec:
+  capacity: 
+    storage: 3Gi
+  accessModes:
+    - ReadWriteMany
+  claimRef:
+    kind: PersistentVolumeClaim
+    namespace: airflow
+    name: data-analyze
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+  hostPath:
+    path: /mnt/data-analyze
+    
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: data-analyze
+  namespace: airflow
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  volumeName: data-analyze
+  volumeMode: Filesystem

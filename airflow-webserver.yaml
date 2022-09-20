@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow-webserver
+  namespace: airflow
+spec:
+  hostNetwork: true
+  replicas: 1
+  selector:
+    matchLabels:
+      app: airflow-webserver
+  template:
+    metadata:
+      labels:
+        app: airflow-webserver
+    spec:
+      automountServiceAccountToken: true
+      serviceAccountName: airflow
+      serviceAccount: airflow
+      containers:
+        - name: airflow-webserver
+          command: ["/bin/bash", "-c"]
+          args: ["airflow webserver"]
+          envFrom:
+            - configMapRef:
+                name: airflow-env
+          image: moonlight165/wei_airflow:0.0.2
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              hostPort: 8080
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /opt/airflow/logs
+              mountPropagation: None
+              name: data-analyze
+              subPath: wei/logs
+            - mountPath: /opt/airflow/dags
+              mountPropagation: None
+              name: data-analyze
+              subPath: wei/dags
+      initContainers:
+        - name: initdb
+          image: moonlight165/wei_airflow:0.0.2
+          imagePullPolicy: Always
+          command: ["/bin/bash", "-c"]
+          args:
+            [
+              "airflow db init; airflow users create --firstname eric --lastname jiang --email xxxx@gmail.com --password jiang123 --username ericjiang --role Admin",
+            ]
+          envFrom:
+            - configMapRef:
+                name: airflow-env
+          volumeMounts:
+            - mountPath: /opt/airflow/logs
+              mountPropagation: None
+              name: data-analyze
+              subPath: wei/logs
+            - mountPath: /opt/airflow/dags
+              mountPropagation: None
+              name: data-analyze
+              subPath: wei/dags
+      volumes:
+        - name: data-analyze
+          persistentVolumeClaim:
+            claimName: data-analyze

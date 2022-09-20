@@ -1,0 +1,48 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: airflow-web
+  namespace: airflow
+spec:
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      nodePort: 30008
+  selector:
+    app: airflow-webserver
+  type: NodePort
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: airflow-web
+  namespace: airflow
+spec:
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: airflow-webserver
+
+---
+
+kind: Ingress
+apiVersion: extensions/v1beta1
+metadata:
+  name: traefik-ingress-pathprefixstrip
+  namespace: airflow
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.frontend.rule.type: PathPrefixStrip
+spec:
+  rules:
+  - http:
+      paths:
+        - path: /airflow/airflow-webserver
+          backend:
+            serviceName: airflow-webserver
+            servicePort: 8080

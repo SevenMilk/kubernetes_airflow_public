@@ -1,0 +1,48 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: airflow-monitor
+  namespace: airflow
+spec:
+  ports:
+    - protocol: TCP
+      port: 5555
+      targetPort: 5555
+      nodePort: 30009
+  selector:
+    app: airflow-flower
+  type: NodePort
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: airflow-monitor
+  namespace: airflow
+spec:
+  ports:
+    - protocol: TCP
+      port: 5555
+      targetPort: 5555
+  selector:
+    app: airflow-flower
+  type: ClusterIP
+---
+
+kind: Ingress
+apiVersion: extensions/v1beta1
+metadata:
+  name: traefik-ingress-pathprefix
+  namespace: airflow
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.frontend.rule.type: PathPrefix
+spec:
+  rules:
+  - http:
+      paths:
+        - path: /airflow/airflow-flower
+          backend:
+            serviceName: airflow-monitor
+            servicePort: 5555

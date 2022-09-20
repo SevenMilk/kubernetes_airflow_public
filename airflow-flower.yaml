@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow-flower
+  namespace: airflow
+spec:
+  hostNetwork: true
+  replicas: 1
+  selector:
+    matchLabels:
+      app: airflow-flower
+  template:
+    metadata:
+      labels:
+        app: airflow-flower
+    spec:
+      automountServiceAccountToken: true
+      serviceAccountName: airflow
+      serviceAccount: airflow
+      containers:
+        - name: airflow-flower
+          command: ["/bin/bash", "-c"]
+          args: ["airflow celery flower"]
+          envFrom:
+            - configMapRef:
+                name: airflow-env
+          image: moonlight165/wei_airflow:0.0.2
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5555
+              hostPort: 5555
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /opt/airflow/logs
+              mountPropagation: None
+              name: data-analyze
+              subPath: wei/logs
+            - mountPath: /opt/airflow/dags
+              mountPropagation: None
+              name: data-analyze
+              subPath: wei/dags
+      volumes:
+        - name: data-analyze
+          persistentVolumeClaim:
+            claimName: data-analyze
